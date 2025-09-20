@@ -105,8 +105,28 @@ input.button:hover {
 
 .qa {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 8pt;
+    font-size: 10pt;
     text-decoration: none;
+    font-weight: bold;
+    background-color: #f0f0f0;
+    border: 1px solid #808080;
+    padding: 1px 4px;
+    margin: 0 1px;
+    color: #000000;
+    display: inline-block;
+    min-width: 12px;
+    text-align: center;
+}
+
+.qa:hover {
+    background-color: #e0e0e0;
+    border-color: #606060;
+    text-decoration: none;
+}
+
+.qa:active {
+    background-color: #d0d0d0;
+    border: 1px inset #808080;
 }
 
 .quote {
@@ -173,127 +193,332 @@ footer {
     text-decoration: underline;
 }
 
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-    /* Body Styles */
-    body {
-        background-color: #121212; /* Deep dark background */
-        color: #d1d1d1; /* Softer off-white for improved contrast */
+/* Dark Mode Toggle Button */
+#theme-toggle {
+    background-color: #f0f0f0;
+    border: 2px outset #c0c0c0;
+    color: #000000;
+    padding: 4px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+#theme-toggle:hover {
+    background-color: #e0e0e0;
+}
+
+#theme-toggle:active {
+    border: 2px inset #c0c0c0;
+}
+
+/* Dark Mode Styles */
+body.dark-theme {
+    background-color: #121212;
+    color: #d1d1d1;
+}
+
+body.dark-theme a {
+    color: #ffa500;
+}
+
+body.dark-theme a:hover {
+    color: #ffcc80;
+}
+
+body.dark-theme .bodytext {
+    color: #e0e0e0;
+}
+
+body.dark-theme .qt {
+    color: #ffffff;
+    background-color: #1e1e1e;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #ffa500;
+}
+
+body.dark-theme .qa {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border: 1px solid #ffa500;
+}
+
+body.dark-theme .qa:hover {
+    background-color: #3e3e3e;
+    color: #ffcc80;
+}
+
+body.dark-theme table {
+    background-color: #1e1e1e;
+    border: 1px solid #ffa500;
+}
+
+body.dark-theme td[bgcolor="#c08000"] {
+    background-color: #c08000 !important;
+}
+
+body.dark-theme td[bgcolor="#f0f0f0"] {
+    background-color: #2e2e2e !important;
+    color: #d1d1d1;
+}
+
+body.dark-theme #theme-toggle {
+    background-color: #2e2e2e;
+    border: 2px outset #555555;
+    color: #ffffff;
+}
+
+body.dark-theme #theme-toggle:hover {
+    background-color: #3e3e3e;
+}
+
+body.dark-theme #theme-toggle:active {
+    border: 2px inset #555555;
+}
+
+body.dark-theme input[type="text"], 
+body.dark-theme input[type="number"], 
+body.dark-theme textarea, 
+body.dark-theme select {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border: 1px solid #555555;
+}
+
+body.dark-theme input[type="submit"], 
+body.dark-theme button {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border: 2px outset #555555;
+}
+
+body.dark-theme input[type="submit"]:hover, 
+body.dark-theme button:hover {
+    background-color: #3e3e3e;
+}
+
+/* Override inline font colors in dark mode */
+body.dark-theme font[color="green"] {
+    color: #90ee90 !important;
+}
+
+body.dark-theme font {
+    color: inherit !important;
+}
+
+/* Apply dark theme when class is on html element (prevents flash) */
+html.dark-theme body {
+    background-color: #121212;
+    color: #d1d1d1;
+}
+
+html.dark-theme a {
+    color: #ffa500;
+}
+
+html.dark-theme a:hover {
+    color: #ffcc80;
+}
+
+html.dark-theme .bodytext {
+    color: #d1d1d1;
+}
+
+html.dark-theme .qt {
+    background-color: #2e2e2e;
+    color: #ffffff;
+    border-left: 3px solid #ffa500;
+}
+
+html.dark-theme .qa {
+    background-color: #333;
+    color: #d1d1d1;
+    border-color: #555;
+}
+
+html.dark-theme .qa:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+html.dark-theme table {
+    background-color: #2e2e2e;
+}
+
+html.dark-theme td[bgcolor="#c08000"] {
+    background-color: #8b4513 !important;
+}
+
+html.dark-theme td[bgcolor="#f0f0f0"] {
+    background-color: #333 !important;
+}
+
+html.dark-theme #theme-toggle {
+    background-color: #333;
+    color: #d1d1d1;
+    border-color: #555;
+}
+
+html.dark-theme #theme-toggle:hover {
+    background-color: #444;
+}
+
+html.dark-theme #theme-toggle:active {
+    background-color: #3e3e3e;
+}
+
+html.dark-theme input[type="text"], 
+html.dark-theme input[type="number"], 
+html.dark-theme textarea, 
+html.dark-theme select {
+    background-color: #333;
+    color: #d1d1d1;
+    border-color: #555;
+}
+
+html.dark-theme input[type="submit"], 
+html.dark-theme button {
+    background-color: #444;
+    color: #d1d1d1;
+    border-color: #666;
+}
+
+html.dark-theme input[type="submit"]:hover, 
+html.dark-theme button:hover {
+    background-color: #3e3e3e;
+}
+
+/* Override inline font colors in dark mode (for html element) */
+html.dark-theme font[color="green"] {
+    color: #90ee90 !important;
+}
+
+html.dark-theme font {
+    color: inherit !important;
+}
+
+/* Mobile Responsive Design */
+@media screen and (max-width: 768px) {
+    /* Make tables and content mobile-friendly while keeping bash.org aesthetic */
+    table {
+        width: 95%;
+        font-size: 14px;
     }
     
-    /* Link Styles */
-    a {
-        color: #ffa500;
-        text-decoration: none;
-        transition: color 0.3s ease;
+    /* Navigation links - stack on small screens */
+    .toplinks {
+        font-size: 12px;
+        text-align: center;
+        padding: 5px;
     }
-
-    a:hover {
-        color: #ffcc80; /* Subtle, warmer hover color */
-        text-decoration: underline; /* Underline on hover for better accessibility */
+    
+    /* Quote buttons - make them touch-friendly */
+    .qa {
+        padding: 8px 12px;
+        margin: 2px;
+        min-width: 35px;
+        font-size: 16px;
+        display: inline-block;
+        text-align: center;
     }
-
-    /* Body Text */
-    .bodytext {
-        line-height: 1.7; /* Increased line spacing for readability */
-        font-size: 1rem; /* Consistent font size */
-        color: #e0e0e0; /* Softer white for text */
+    
+    /* Quote text - ensure readability */
+    .qt {
+        font-size: 14px;
+        line-height: 1.4;
+        word-wrap: break-word;
     }
-
-    /* Table, Input Fields, Textarea, Select Elements */
-    table, td, input.text, textarea, select {
-        background-color: #1a1a1a; /* Darker backgrounds for contrast */
-        color: #d1d1d1; /* Softer white text */
-        border-color: #ffa500; /* Keeping borders on accents */
+    
+    /* Quote header - adjust spacing */
+    .quote {
+        font-size: 14px;
+        margin-bottom: 8px;
     }
-
-    /* Submit Button */
-    input.button {
-        background-color: #ffa500;
-        color: #121212; /* Darker button text for readability */
-        border-radius: 6px; /* Slight rounding for modern design */
-        padding: 8px 12px; /* Increased padding for better button size */
-        font-weight: bold; /* More defined button text */
-        transition: background-color 0.3s ease, color 0.3s ease;
+    
+    /* Form elements - make touch-friendly */
+    input[type="text"], input[type="number"], textarea, select {
+        width: 90%;
+        padding: 10px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        margin: 5px 0;
     }
-
-    input.button:hover {
-        background-color: #ff8c00; /* Brighter hover color */
-        color: #ffffff; /* White text on hover for better contrast */
+    
+    input[type="submit"], button {
+        padding: 10px 15px;
+        font-size: 16px;
+        margin: 5px;
+        min-height: 44px; /* iOS touch target */
     }
-
-    /* Headers, Footer, and Other Text Elements */
-    .footertext, .toplinks, h2 {
-        color: #ffa500; /* Accent color for headers */
+    
+    /* Pagination - mobile friendly */
+    #pagination {
+        font-size: 14px;
+        text-align: center;
+        padding: 10px;
     }
-
-    h2 {
-        font-size: 1.5rem; /* Larger headers for better hierarchy */
-        border-bottom: 2px solid #ffa500; /* Visual distinction for headers */
-        padding-bottom: 10px;
-    }
-
-    /* Quote Box Borders */
-    td.quote-box {
-        border-color: #ffa500;
-        background-color: #1e1e1e; /* Subtle background for quotes */
-        padding: 15px; /* Improved padding for readability */
-    }
-
-    /* Footer */
-    footer {
-        background-color: #181818; /* Consistent footer background */
-        color: #d1d1d1; /* Softer text in footer */
-        border-top: 2px solid #ffa500; /* Accent line to separate footer */
-        padding: 15px;
-    }
-
-    /* Pagination Links */
+    
     #pagination a {
-        border-color: #ffa500;
-        color: #ffa500;
-        background-color: transparent;
-        padding: 8px 12px; /* Larger clickable area */
-        border-radius: 4px; /* Rounded edges for pagination */
-        transition: background-color 0.3s ease, color 0.3s ease;
+        padding: 8px 12px;
+        margin: 2px;
+        display: inline-block;
     }
-
-    #pagination a:hover {
-        background-color: #2e2e2e; /* Slightly brighter hover */
-        color: #ffffff; /* White text for hover state */
+    
+    /* ModApp table - horizontal scroll for wide tables */
+    .modapp-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
-
-    /* Quote ID Links */
-    .quote-id {
-        color: #ffa500;
-        font-weight: bold; /* Bold for emphasis */
-        transition: color 0.3s ease;
+    
+    .modapp-table-container table {
+        min-width: 600px;
+        width: auto;
     }
-
-    .quote-id:hover {
-        color: #ffcc80; /* Brighter hover for clarity */
+    
+    /* Hide less important columns on mobile */
+    @media screen and (max-width: 480px) {
+        .mobile-hide {
+            display: none;
+        }
+        
+        .qa {
+            padding: 6px 10px;
+            font-size: 14px;
+            min-width: 30px;
+        }
+        
+        .quote {
+            font-size: 12px;
+        }
+        
+        .qt {
+            font-size: 13px;
+        }
     }
+}
 
-    /* Other Element Styles */
-    input.text, textarea, select {
-        border-radius: 4px;
-        padding: 8px;
+/* Touch-friendly improvements for all screen sizes */
+@media (hover: none) and (pointer: coarse) {
+    /* This targets touch devices */
+    .qa {
+        padding: 10px 15px;
+        margin: 3px;
+        min-height: 44px;
+        min-width: 44px;
     }
-
-    input.button:disabled {
-        background-color: #444444; /* Disabled button appearance */
-        color: #aaaaaa; /* Disabled text color */
-        cursor: not-allowed;
+    
+    a {
+        padding: 5px;
+        margin: 2px;
     }
-
-    /* Table and Layout Enhancements */
-    table {
-        background-color: #1e1e1e;
-        border: 1px solid #ffa500;
-    }
-
-    td {
-        padding: 15px; /* More padding for larger table cells */
+    
+    /* Ensure all interactive elements are large enough */
+    button, input[type="submit"], input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px;
     }
 }
 

@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ircquotes: Add a Quote</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <script>
+        // Prevent flash of white content by applying theme immediately
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.className = 'dark-theme';
+            }
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </head>
 <body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000" onload="document.add.newquote.focus();">
     <center>
@@ -32,14 +43,16 @@
                     <a href="/submit">Submit</a> /
                     <a href="/browse">Browse</a> /
                     <a href="/modapp">ModApp</a> /
-                    <a href="/search">Search</a>
+                    <a href="/search">Search</a> /
                     <a href="/faq">FAQ</a>
+                    <button id="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode">🌙</button>
                 </td>
             </tr>
         </table>
 
         <!-- Add a Quote Form -->
         <form action="/submit" name="add" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <table cellpadding="2" cellspacing="0" width="60%">
                 <tr>
                     <td><textarea cols="100%" rows="10" name="quote" class="text"></textarea></td>

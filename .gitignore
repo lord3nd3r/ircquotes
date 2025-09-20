@@ -1,2 +1,28 @@
-venv
-instance
+# Virtual Environment
+venv/
+.venv/
+
+# Flask instance folder
+instance/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

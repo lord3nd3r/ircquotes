@@ -5,28 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ircquotes: Search & Read</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <script>
+        // Prevent flash of white content by applying theme immediately
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.className = 'dark-theme';
+            }
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='voting.js') }}"></script>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </head>
-<body>
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
 
-    <!-- Header -->
+    <!-- Top Navigation Bar -->
     <center>
-        <table cellpadding="2" cellspacing="0" width="80%" class="header">
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
             <tr>
-                <td class="header-left">
-                    <b><i>ircquotes</i></b>
+                <td bgcolor="#c08000" align="left">
+                    <font size="+1"><b><i>ircquotes</i></b></font>
                 </td>
-                <td class="header-right">
-                    <b>Search & Read Quotes</b>
+                <td bgcolor="#c08000" align="right">
+                    <font face="arial" size="+1"><b>Search & Read Quotes</b></font>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Navigation Links -->
+        <table cellpadding="2" cellspacing="0" width="80%" border="0">
+            <tr>
+                <td class="footertext" align="left" bgcolor="#f0f0f0"></td>
+                <td align="right" bgcolor="#f0f0f0" class="toplinks" colspan="2">
+                    <a href="/">Home</a> /
+                    <a href="/random">Random</a> /
+                    <a href="/submit">Submit</a> /
+                    <a href="/browse">Browse</a> /
+                    <a href="/modapp">ModApp</a> /
+                    <a href="/search">Search</a> /
+                    <a href="/faq">FAQ</a>
+                    <button id="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode">🌙</button>
                 </td>
             </tr>
         </table>
     </center>
 
-    <!-- Navigation Bar -->
+    <!-- Search Forms -->
     <center>
-        <table cellpadding="2" cellspacing="0" width="80%" class="nav-bar">
+        <table cellpadding="0" cellspacing="3" width="80%">
             <tr>
-                <td align="right" class="toplinks" colspan="2">
+                <td class="bodytext" width="100%" valign="top">
+                    <!-- Search for Quotes -->
+                    <p><b>Search for Quotes by Keyword</b></p>
+                    <form action="/search" method="GET">
+                        <input type="text" name="q" value="{{ query or '' }}" placeholder="Enter search term" required>
+                        <input type="submit" value="Search">
+                    </form>
+                    <br>
+
+                    <!-- Read Quote by Number -->
+                    <p><b>Read a Quote by Number</b></p>
+                    <form action="/quote" method="GET">
+                        <input type="number" name="id" placeholder="Enter quote number" required>
+                        <input type="submit" value="Read">
+                    </form>
+                    <hr>
+                </td>
+            </tr>
+        </table>
+    </center>
+    <!-- Search Results -->
+    {% if query %}
+    <center>
+        <table cellpadding="0" cellspacing="3" width="80%">
+            <tr>
+                <td class="bodytext" width="100%" valign="top">
+                    <p><b>Search Results for "{{ query }}"</b></p>
+                    {% if quotes %}
+                        {% for quote in quotes %}
+                        <p class="quote">
+                            <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote."><b>#{{ quote.id }}</b></a>
+                            &nbsp;
+                            <a href="#" onclick="return vote({{ quote.id }}, &quot;upvote&quot;, this)" class="qa" id="up-{{ quote.id }}">+</a>
+                            <span id="votes-{{ quote.id }}"><font color="green">{{ quote.votes }}</font></span>
+                            <a href="#" onclick="return vote({{ quote.id }}, &quot;downvote&quot;, this)" class="qa" id="down-{{ quote.id }}">-</a>
+                            &nbsp;
+                            <a href="#" onclick="return flag({{ quote.id }}, this)" class="qa">X</a>
+                            &nbsp;
+                            <a href="#" onclick="return copyQuote({{ quote.id }}, this)" class="qa" title="Copy quote to clipboard">C</a>
+                        </p>
+                        <p class="qt">{{ quote.text|e }}</p>
+                        <hr>
+                        {% endfor %}
+                    {% else %}
+                        <p>No quotes found for "{{ query }}".</p>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </center>
+    {% endif %}
+
+    <!-- Footer -->
+    <center>
+        <table border="0" cellpadding="2" cellspacing="0" width="80%" bgcolor="#c08000">
+            <tr>
+                <td bgcolor="#f0f0f0" class="toplinks" colspan="2">
                     <a href="/">Home</a> /
                     <a href="/random">Random</a> /
                     <a href="/submit">Submit</a> /
@@ -36,67 +121,16 @@
                     <a href="/faq">FAQ</a>
                 </td>
             </tr>
-        </table>
-    </center>
-
-    <!-- Content Section -->
-    <center>
-        <div class="content-box">
-            <!-- Search for Quotes -->
-            <h2>Search for Quotes by Keyword</h2>
-            <form action="/search" method="GET">
-                <input type="text" name="q" class="text" placeholder="Enter search term" required>
-                <input type="submit" value="Search" class="button">
-            </form>
-
-            <!-- Read Quote by Number -->
-            <h2>Read a Quote by Number</h2>
-            <form action="/read" method="GET">
-                <input type="number" name="id" class="text" placeholder="Enter quote number" required>
-                <input type="submit" value="Read" class="button">
-            </form>
-        </div>
-
-        <!-- Results Section -->
-        <div class="results-box">
-            {% if query %}
-                <h3>Search Results for "{{ query }}"</h3>
-                {% if quotes %}
-                    <table cellpadding="0" cellspacing="3" width="80%">
-                        <tr>
-                            <td class="bodytext" width="100%" valign="top">
-                                {% for quote in quotes %}
-                                    <p class="quote">
-                                        <a href="/quote?id={{ quote.id }}" title="Permanent link to this quote.">
-                                            <b>#{{ quote.id }}</b>
-                                        </a>
-                                        <a href="/vote/{{ quote.id }}/upvote" class="qa">+</a>
-                                        (<span class="votes">{{ quote.votes }}</span>)
-                                        <a href="/vote/{{ quote.id }}/downvote" class="qa">-</a>
-                                    </p>
-                                    <p class="qt">{{ quote.text }}</p>
-                                    <hr>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                    </table>
-                {% else %}
-                    <h4>No quotes found for "{{ query }}".</h4>
-                {% endif %}
-            {% endif %}
-        </div>
-    </center>
-
-    <!-- Footer -->
-    <center>
-        <table border="0" cellpadding="2" cellspacing="0" width="80%" class="footer">
             <tr>
-                <td class="footertext" align="right">{{ approved_count }} quotes approved; {{ pending_count }} quotes pending</td>
+                <td class="footertext" align="left">&nbsp;</td>
+                <td class="footertext" align="right">{{ approved_count }} quotes approved</td>
             </tr>
         </table>
-        <div class="copyright">
+
+        <font size="-1">
+            <a href="#">Hosted by YourHostingProvider</a><br>
             &#169; ircquotes 2024, All Rights Reserved.
-        </div>
+        </font>
     </center>
 
 </body>
