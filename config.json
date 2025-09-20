@@ -59,7 +59,7 @@
     "password_hash": "$argon2i$v=19$m=65536,t=4,p=1$cWZDc1pQaUJLTUJoaVI4cw$kn8XKz6AEZi8ebXfyyZuzommSypliVFrsGqzOyUEIHA"
   },
   "quotes": {
-    "min_length": 10,
+    "min_length": 1,
     "max_length": 5000,
     "per_page": 25,
     "auto_approve": false,
@@ -74,7 +74,7 @@
     "bulk_moderation_enabled": true
   },
   "logging": {
-    "level": "WARNING",
+    "level": "DEBUG",
     "format": "%(asctime)s [%(levelname)s] %(message)s"
   }
 }

@@ -89,7 +89,10 @@ csrf.exempt('search_quotes')
 csrf.exempt('get_stats')
 
 # Initialize rate limiter with custom IP detection
-limiter = Limiter(app, key_func=get_real_ip)
+limiter = Limiter(
+    key_func=get_real_ip,
+    app=app
+)
 
 db = SQLAlchemy(app)
 
@@ -164,8 +167,8 @@ def submit():
         
         # Input validation and length limits from config
         quote_text = quote_text.strip()
-        min_length = config.min_quote_length
-        max_length = config.max_quote_length
+        min_length = config.get('quotes.min_length', 10)
+        max_length = config.get('quotes.max_length', 5000)
         
         if len(quote_text) < min_length:
             flash(f"Your quote is too short. Please enter at least {min_length} characters.", 'error')
@@ -184,14 +187,32 @@ def submit():
         ip_address = get_real_ip()  # Get the real user's IP address
         user_agent = request.headers.get('User-Agent')  # Get the user's browser info
 
-        new_quote = Quote(text=quote_text, ip_address=ip_address, user_agent=user_agent)
+        # Determine initial status based on config
+        auto_approve = config.get('quotes.auto_approve', False)
+        initial_status = 1 if auto_approve else 0  # 1 = approved, 0 = pending
+
+        new_quote = Quote(
+            text=quote_text, 
+            ip_address=ip_address, 
+            user_agent=user_agent,
+            status=initial_status
+        )
 
         try:
             db.session.add(new_quote)
             db.session.commit()
-            flash("Thanks! Your quote has been submitted and is awaiting approval by our moderators.", 'success')
+            
+            # Log the quote creation for debugging
+            if config.get('logging.level') == 'DEBUG':
+                print(f"Quote created: ID={new_quote.id}, Status={new_quote.status}, Text='{quote_text[:50]}...'")
+            
+            if auto_approve:
+                flash("Thanks! Your quote has been submitted and automatically approved.", 'success')
+            else:
+                flash("Thanks! Your quote has been submitted and is awaiting approval by our moderators.", 'success')
         except Exception as e:
             db.session.rollback()
+            print(f"Error submitting quote: {e}")  # Always log errors
             flash("Sorry, something went wrong while submitting your quote. Please try again in a moment.", 'error')
 
         return redirect(url_for('index'))
