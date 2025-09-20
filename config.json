@@ -1,9 +1,16 @@
 {
   "app": {
     "name": "ircquotes",
-    "host": "0.0.0.0",
-    "port": 5050,
+    "host": "127.0.0.1",
+    "port": 6969,
     "debug": false
+  },
+  "gunicorn": {
+    "workers": 4,
+    "timeout": 30,
+    "keepalive": 5,
+    "max_requests": 1000,
+    "preload": true
   },
   "database": {
     "uri": "sqlite:///quotes.db?timeout=20",

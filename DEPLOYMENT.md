@@ -35,7 +35,7 @@ python config_manager.py rate_limiting.endpoints.login "10 per minute"
 
 ## Running with Gunicorn (Production)
 
-### Quick Start
+### Quick Start - Uses config.json settings
 ```bash
 # Activate virtual environment
 source .venv/bin/activate
@@ -43,25 +43,28 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Run with Gunicorn (recommended for production)
+# Option 1: Run with config file (recommended - uses config.json)
 gunicorn --config gunicorn.conf.py app:app
+
+# Option 2: Run with Python launcher (also uses config.json)
+python start_gunicorn.py
 ```
 
-### Alternative Gunicorn Commands
+### Manual Gunicorn Commands (ignores config.json)
 
 **Basic production run:**
 ```bash
-gunicorn -w 4 -b 0.0.0.0:5050 app:app
+gunicorn -w 4 -b 127.0.0.1:6969 app:app
 ```
 
 **With more workers (for higher traffic):**
 ```bash
-gunicorn -w 8 -b 0.0.0.0:5050 --timeout 30 app:app
+gunicorn -w 8 -b 127.0.0.1:6969 --timeout 30 app:app
 ```
 
 **Behind a reverse proxy (nginx/apache):**
 ```bash
-gunicorn -w 4 -b 127.0.0.1:5050 app:app
+gunicorn -w 4 -b 127.0.0.1:6969 app:app
 ```
 
 ### Environment Variables for Production
