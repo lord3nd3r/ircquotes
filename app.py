@@ -16,6 +16,34 @@ from sqlalchemy.engine import Engine
 import sqlite3
 from config_loader import config  # Import configuration system
 
+def get_real_ip():
+    """
+    Get the real client IP address considering Cloudflare and nginx reverse proxy.
+    Checks headers in order of priority:
+    1. CF-Connecting-IP (Cloudflare's real IP header)
+    2. X-Forwarded-For (standard proxy header)
+    3. X-Real-IP (nginx real IP header)
+    4. request.remote_addr (fallback)
+    """
+    # Cloudflare provides the real IP in CF-Connecting-IP header
+    cf_ip = request.headers.get('CF-Connecting-IP')
+    if cf_ip:
+        return cf_ip
+    
+    # Check X-Forwarded-For (may contain multiple IPs, first is original client)
+    forwarded_for = request.headers.get('X-Forwarded-For')
+    if forwarded_for:
+        # Take the first IP in the chain (original client)
+        return forwarded_for.split(',')[0].strip()
+    
+    # Check X-Real-IP (nginx header)
+    real_ip = request.headers.get('X-Real-IP')
+    if real_ip:
+        return real_ip
+    
+    # Fallback to request.remote_addr or default
+    return request.remote_addr or '127.0.0.1'
+
 # Configure SQLite for better concurrency
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -60,13 +88,14 @@ csrf.exempt('get_top_quotes')
 csrf.exempt('search_quotes')
 csrf.exempt('get_stats')
 
-# Initialize rate limiter
-limiter = Limiter(app, key_func=get_remote_address)
+# Initialize rate limiter with custom IP detection
+limiter = Limiter(app, key_func=get_real_ip)
 
 db = SQLAlchemy(app)
 
-# Apply ProxyFix middleware
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+# Apply ProxyFix middleware for Cloudflare + nginx setup
+# x_for=2: nginx (1) + Cloudflare (1) = 2 proxies in X-Forwarded-For chain
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
 # Initialize Argon2 password hasher
 ph = PasswordHasher()
@@ -152,7 +181,7 @@ def submit():
                 flash("Invalid content detected. Please remove any script tags or JavaScript.", 'error')
                 return redirect(url_for('submit'))
 
-        ip_address = request.headers.get('CF-Connecting-IP', request.remote_addr)  # Get the user's IP address
+        ip_address = get_real_ip()  # Get the real user's IP address
         user_agent = request.headers.get('User-Agent')  # Get the user's browser info
 
         new_quote = Quote(text=quote_text, ip_address=ip_address, user_agent=user_agent)
