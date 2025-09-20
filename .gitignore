@@ -2,8 +2,9 @@
 venv/
 .venv/
 
-# Flask instance folder
-instance/
+# Flask instance folder - keep the folder but ignore sensitive files
+instance/flask_secret_key
+instance/*.log
 
 # Python
 __pycache__/
@@ -12,8 +13,7 @@ __pycache__/
 *.pyd
 .Python
 
-# Database files
-*.db
+# Database WAL files (keep main .db file)
 *.db-shm
 *.db-wal
 
