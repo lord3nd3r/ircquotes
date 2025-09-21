@@ -1,11 +1,11 @@
 // AJAX voting functionality
 function vote(quoteId, action, buttonElement) {
-    // Prevent multiple clicks
+    // Prevent multiple clicks on the same button
     if (buttonElement.disabled) {
         return false;
     }
     
-    // Disable button temporarily
+    // Disable button temporarily to prevent double-clicks
     buttonElement.disabled = true;
     
     // Make AJAX request
@@ -15,9 +15,16 @@ function vote(quoteId, action, buttonElement) {
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(response => {
+        // Handle both successful and error responses with JSON
+        return response.json().then(data => {
+            return { data, status: response.status, ok: response.ok };
+        });
+    })
+    .then(result => {
+        const { data, status, ok } = result;
+        
+        if (ok && data.success) {
             // Update vote count display
             const voteElement = document.getElementById(`votes-${quoteId}`);
             if (voteElement) {
@@ -27,7 +34,15 @@ function vote(quoteId, action, buttonElement) {
             // Update button states based on user's voting history
             updateButtonStates(quoteId, data.user_vote);
         } else {
-            alert(data.message || 'Sorry, your vote could not be recorded. Please try again.');
+            // Show the server's error message, with special handling for rate limiting
+            let errorMessage = data.message || 'Sorry, your vote could not be recorded. Please try again.';
+            
+            if (status === 429) {
+                // Rate limiting or flood control
+                errorMessage = data.message || 'Please slow down! You\'re voting too quickly. Wait a moment and try again.';
+            }
+            
+            alert(errorMessage);
         }
     })
     .catch(error => {
@@ -35,7 +50,7 @@ function vote(quoteId, action, buttonElement) {
         alert('Connection error while voting. Please check your internet connection and try again.');
     })
     .finally(() => {
-        // Re-enable button
+        // Re-enable the button immediately
         buttonElement.disabled = false;
     });
     

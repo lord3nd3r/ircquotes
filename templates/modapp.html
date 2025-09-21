@@ -16,6 +16,7 @@
         })();
     </script>
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='modapp.js') }}"></script>
 </head>
 <body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000">
 
@@ -125,7 +126,15 @@
                         0
                     {% endif %}
                 </td>
-                <td class="mobile-hide">{{ quote.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if quote.submitted_at else 'N/A' }}</td>
+                <td class="mobile-hide">
+                    {% if quote.submitted_at %}
+                        {{ quote.submitted_at.strftime('%d/%m/%y %H:%M:%S') }}
+                    {% elif quote.date %}
+                        {{ quote.date.strftime('%d/%m/%y') }} (legacy)
+                    {% else %}
+                        No date
+                    {% endif %}
+                </td>
                 <td class="mobile-hide">{{ quote.ip_address|e }}</td>
                 <td class="mobile-hide">{{ quote.user_agent|e|truncate(50) }}</td>
                 <td>

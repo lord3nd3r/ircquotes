@@ -13,24 +13,30 @@ All application settings are now centralized in `config.json`. You can easily mo
 - **Admin credentials**
 - **Feature toggles**
 
-### Viewing Current Configuration
+### Configuration Management
+All configuration is done by editing `config.json` directly. This file contains all application settings organized in sections:
+
+- **app**: Basic application settings (name, host, port, debug)
+- **database**: Database connection settings
+- **security**: Security headers, CSRF, proxy settings
+- **rate_limiting**: Rate limiting configuration for different endpoints
+- **admin**: Admin username and password hash
+- **quotes**: Quote submission settings (length limits, pagination)
+- **features**: Feature toggles (voting, flagging, dark mode, etc.)
+- **logging**: Logging configuration
+
+### Example Configuration Changes
 ```bash
-python config_manager.py
-```
+# Edit config.json in any text editor
+nano config.json
 
-### Updating Configuration
-```bash
-# Change port
-python config_manager.py app.port 8080
+# Example changes:
+# - Change port: "port": 8080 in the "app" section
+# - Change quotes per page: "per_page": 50 in the "quotes" section  
+# - Disable CSRF: "csrf_enabled": false in the "security" section
+# - Change rate limits: "login": "10 per minute" in rate_limiting.endpoints
 
-# Change quotes per page
-python config_manager.py quotes.per_page 50
-
-# Disable CSRF (not recommended)
-python config_manager.py security.csrf_enabled false
-
-# Change rate limits
-python config_manager.py rate_limiting.endpoints.login "10 per minute"
+# After making changes, restart the application
 ```
 
 ## Running with Gunicorn (Production)

@@ -29,8 +29,12 @@ def generate_password_hash():
     
     print("\nGenerated password hash:")
     print(hash_value)
-    print("\nTo set this as admin password, run:")
-    print(f'python config_manager.py admin.password_hash "{hash_value}"')
+    print("\nTo set this as admin password:")
+    print("1. Open config.json in a text editor")
+    print("2. Find the 'admin' section")
+    print("3. Replace the 'password_hash' value with:")
+    print(f'   "{hash_value}"')
+    print("4. Save the file and restart the application")
 
 if __name__ == "__main__":
     generate_password_hash()

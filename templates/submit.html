@@ -17,7 +17,7 @@
     </script>
     <script src="{{ url_for('static', filename='theme.js') }}"></script>
 </head>
-<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000" onload="document.add.newquote.focus();">
+<body bgcolor="#ffffff" text="#000000" link="#c08000" vlink="#c08000" alink="#c08000" onload="document.add.quote.focus();">
     <center>
         <!-- Header -->
         <table cellpadding="2" cellspacing="0" width="80%" border="0">
@@ -54,8 +54,20 @@
         <form action="/submit" name="add" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <table cellpadding="2" cellspacing="0" width="60%">
+                {% if preview_text %}
+                <!-- Preview Section -->
                 <tr>
-                    <td><textarea cols="100%" rows="10" name="quote" class="text"></textarea></td>
+                    <td>
+                        <h3>Quote Preview:</h3>
+                        <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0; background-color: #f9f9f9;">
+                            <pre style="white-space: pre-wrap; font-family: monospace;">{{ preview_text }}</pre>
+                        </div>
+                        <p><strong>If this looks correct, click "Submit Quote" below. Otherwise, edit your quote and preview again.</strong></p>
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td><textarea cols="100%" rows="10" name="quote" class="text">{{ original_text or '' }}</textarea></td>
                 </tr>
                 <tr>
                     <td><input type="checkbox" name="strip" checked> Automatically attempt to fix timestamps and common mistakes.</td>
@@ -71,7 +83,7 @@
                     <td>
                         <br><br>
                         You may submit quotes from any chat medium, so long as they have reasonable
-                        formatting (IRC, AIM, ICQ, Yahoo, NOT MSN or MS Chat).<br><br>
+                        formatting (IRC, etc.).<br><br>
                         Tips for approval: no timestamps, keep it short (trim useless parts), remove trailing laughs, and avoid inside jokes.
                     </td>
                 </tr>

@@ -68,6 +68,14 @@
                         <a href="#" onclick="return flag({{ quote.id }}, this)" class="qa">X</a>
                         &nbsp;
                         <a href="#" onclick="return copyQuote({{ quote.id }}, this)" class="qa" title="Copy quote to clipboard">C</a>
+                        &nbsp;
+                        <span style="color: #666; font-size: 0.9em;">
+                            {% if quote.submitted_at %}
+                                {{ quote.submitted_at.strftime('%d/%m/%y %H:%M') }}
+                            {% elif quote.date %}
+                                {{ quote.date.strftime('%d/%m/%y') }}
+                            {% endif %}
+                        </span>
                     </p>
 
                     <p class="qt">{{ quote.text|e }}</p>
