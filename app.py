@@ -120,20 +120,29 @@ if db_uri.startswith('sqlite:///instance/'):
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = config.database_uri
 
-# Securely load the secret key with absolute path resolution
 import os
+import secrets
+
+# Securely load the secret key with absolute path resolution
 base_dir = os.path.abspath(os.path.dirname(__file__))
+# Note: config.json logic or config_loader might be initializing the app earlier or conflicting!
+# Let's ensure SECRET_KEY is set on the app object directly and immediately.
+
 secret_key_path = os.path.join(base_dir, "instance", "flask_secret_key")
 
 try:
     with open(secret_key_path, "r") as f:
-        app.config['SECRET_KEY'] = f.read().strip()
+        file_secret = f.read().strip()
+        if file_secret:
+            app.config['SECRET_KEY'] = file_secret
+        else:
+            print("Warning: Secret key file is empty. Generating temporary key.")
+            app.config['SECRET_KEY'] = secrets.token_hex(32)
 except FileNotFoundError:
-    # Fallback to generating a key if file missing (dev convenience, logs warning)
-    app.logger.warning(f"Secret key file not found at {secret_key_path}. Generating temporary one.")
-    import secrets
+    print(f"Warning: Secret key file not found at {secret_key_path}. Generating temporary one.")
     app.config['SECRET_KEY'] = secrets.token_hex(32)
 
+app.secret_key = app.config['SECRET_KEY'] # Explicitly set attribute for older Flask extensions
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Apply ProxyFix middleware to handle behind-proxy requests properly
