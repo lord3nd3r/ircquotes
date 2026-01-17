@@ -99,7 +99,27 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.close()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = config.database_uri
+
+# Fix SQLite path to be absolute to avoid CWD ambiguity
+# This ensures it works regardless of where the script is run from
+db_uri = config.database_uri
+if db_uri.startswith('sqlite:///instance/'):
+    import os
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    # Extract filename and params
+    rel_path_with_params = db_uri.split('sqlite:///instance/')[1]
+    if '?' in rel_path_with_params:
+        filename, params = rel_path_with_params.split('?', 1)
+        params = '?' + params
+    else:
+        filename = rel_path_with_params
+        params = ''
+        
+    db_path = os.path.join(base_dir, 'instance', filename)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}{params}"
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = config.database_uri
+
 app.config['SECRET_KEY'] = open("instance/flask_secret_key", "r").read().strip()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
