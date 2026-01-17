@@ -121,6 +121,26 @@ pytest
 ```
 *Note: The tests use a file-swapping mechanism to safely backup your production database while running tests against a temporary one.*
 
+## Recent Improvements (Jan 2026 Refactor)
+
+The codebase has undergone a significant modernization and security audit. Key changes include:
+
+### 🔒 Security
+- **Argon2 Hashing**: Replaced legacy password handling with Argon2 for robust admin authentication.
+- **Rate Limiting**: Implemented a 60-second cooldown per IP on the submission endpoint to prevent spam flooding.
+- **Proxy Integrity**: Added `ProxyFix` middleware to correctly resolve user IPs behind Cloudflare/Nginx, ensuring voting and rate-limiting integrity.
+- **Search Protection**: Capped web search results to 50 items to prevent Denial of Service (DoS) via broad queries.
+- **Safe Admin Scripts**: Added confirmation prompts to database reset scripts to prevent accidental data loss.
+
+### ⚡ Performance & Stability
+- **Vote Integrity**: Migrated from cookie-based voting to a database-backed `Vote` model (1 vote per IP per quote).
+- **Concurrent SQLite**: Configured SQLite with WAL mode and `NullPool` to handle concurrent connections and prevent locking errors.
+- **Flask 3.x Compatibility**: Updated all routes and contexts to support Flask 3.0+ and Werkzeug 3.0 standards.
+
+### 🧪 Infrastructure
+- **Test Suite**: Added a complete integration test suite (`pytest`) with safe database isolation.
+- **Dependency Management**: Updated `requirements.txt` with modern package versions.
+
 ## API Documentation
 
 The application exposes a JSON API for third-party integrations.
