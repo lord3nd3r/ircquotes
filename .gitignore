@@ -5,10 +5,11 @@ venv/
 # Flask instance folder - keep the folder but ignore sensitive files
 instance/flask_secret_key
 instance/*.log
-instance/quotes.db
+# instance/quotes.db
 
 # Database
 *.db
+!instance/quotes.db
 *.db-shm
 *.db-wal
 
@@ -31,3 +32,8 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Temporary data
+bash.org/
+bash.org.txt.tar.gz
+
