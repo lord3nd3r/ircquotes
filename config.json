@@ -13,7 +13,7 @@
     "preload": true
   },
   "database": {
-    "uri": "sqlite:///quotes.db?timeout=20",
+    "uri": "sqlite:///instance/quotes.db?timeout=20",
     "pool_timeout": 20,
     "pool_recycle": -1,
     "pool_pre_ping": true
