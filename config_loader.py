@@ -89,12 +89,19 @@ class Config:
         return self.get('quotes.max_length', 5000)
     
     @property
-    def admin_username(self) -> str:
-        return self.get('admin.username', 'admin')
-    
-    @property
-    def admin_password_hash(self) -> str:
-        return self.get('admin.password_hash', '')
+    def admins(self) -> list:
+        # Fallback for old style config to maintain compatibility if needed, though we updated config.json
+        admins = self.get('admins')
+        if admins:
+            return admins
+        
+        # Fallback to legacy single admin if 'admins' list is missing
+        legacy_username = self.get('admin.username')
+        legacy_hash = self.get('admin.password_hash')
+        if legacy_username and legacy_hash:
+            return [{'username': legacy_username, 'password_hash': legacy_hash}]
+            
+        return []
     
     @property
     def logging_level(self) -> str:

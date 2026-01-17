@@ -29,11 +29,14 @@ def generate_password_hash():
     
     print("\nGenerated password hash:")
     print(hash_value)
-    print("\nTo set this as admin password:")
+    print("\nTo add this admin:")
     print("1. Open config.json in a text editor")
-    print("2. Find the 'admin' section")
-    print("3. Replace the 'password_hash' value with:")
-    print(f'   "{hash_value}"')
+    print("2. Find the 'admins' list")
+    print("3. Add a new object or update an existing one:")
+    print('   {')
+    print('     "username": "YOUR_USERNAME",')
+    print(f'     "password_hash": "{hash_value}"')
+    print('   }')
     print("4. Save the file and restart the application")
 
 if __name__ == "__main__":

@@ -213,11 +213,6 @@ def add_security_headers(response):
     return response
 
 # Admin credentials from config
-ADMIN_CREDENTIALS = {
-    'username': config.admin_username,
-    'password': config.admin_password_hash
-}
-
 # Define the Quote model
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -570,17 +565,21 @@ def login():
                 return render_template('login.html')
             
             # Check if the username is correct and verify the password using Argon2
-            if username == ADMIN_CREDENTIALS['username']:
+            # Supports multiple admins defined in config.json
+            admin_user = next((admin for admin in config.admins if admin['username'] == username), None)
+            
+            if admin_user:
                 try:
-                    ph.verify(ADMIN_CREDENTIALS['password'], password)  # Verify password using Argon2
+                    ph.verify(admin_user['password_hash'], password)  # Verify password using Argon2
                     
                     # Regenerate session ID to prevent session fixation attacks
                     # Clear the old session and create a new one
                     session.clear()
                     session.permanent = True
                     session['admin'] = True
+                    session['admin_username'] = username
                     
-                    flash('Welcome back! You are now logged in as administrator.', 'success')
+                    flash(f'Welcome back, {username}! You are now logged in as administrator.', 'success')
                     return redirect(url_for('modapp'))
                 except VerifyMismatchError:
                     flash('The password you entered is incorrect. Please check your password and try again.', 'danger')

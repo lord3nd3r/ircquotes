@@ -14,6 +14,7 @@ def fix_admin_password():
     print("Let's generate a new one...")
     
     # Get new password
+    username = input("Enter username to update (e.g. ComputerTech): ").strip()
     password = getpass.getpass("Enter new admin password: ")
     confirm = getpass.getpass("Confirm password: ")
     
@@ -34,10 +35,45 @@ def fix_admin_password():
         return
     
     # Update the password hash
-    if 'admin' not in config:
-        config['admin'] = {}
+    updated = False
     
-    config['admin']['password_hash'] = new_hash
+    # Support for new 'admins' list
+    if 'admins' in config and isinstance(config['admins'], list):
+        for admin in config['admins']:
+            if admin.get('username') == username:
+                admin['password_hash'] = new_hash
+                updated = True
+                break
+        
+        if not updated:
+            print(f"User '{username}' not found in admins list. Adding new admin.")
+            config['admins'].append({
+                'username': username,
+                'password_hash': new_hash
+            })
+            updated = True
+            
+    # Legacy support fallback
+    elif 'admin' in config:
+        if config['admin'].get('username') == username:
+             config['admin']['password_hash'] = new_hash
+             updated = True
+        else:
+            # Upgrade to new structure
+             print("Upgrading config to support multiple admins...")
+             current_admin = config.pop('admin')
+             config['admins'] = [
+                 current_admin,
+                 {'username': username, 'password_hash': new_hash}
+             ]
+             updated = True
+    else:
+        # Create new structure
+        config['admins'] = [{
+            'username': username,
+            'password_hash': new_hash
+        }]
+        updated = True
     
     # Save config
     try:

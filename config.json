@@ -32,10 +32,16 @@
       "content_security_policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
     }
   },
-  "admin": {
-    "username": "ComputerTech",
-    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$cIPRCJrjS1DwjaFov5G+BQ$yundbpf2i1jBrKsj96ra7wTNmVZ56SJR25XX4jp2yR8"
-  },
+  "admins": [
+    {
+      "username": "ComputerTech",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$cIPRCJrjS1DwjaFov5G+BQ$yundbpf2i1jBrKsj96ra7wTNmVZ56SJR25XX4jp2yR8"
+    },
+    {
+      "username": "ender",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$mc6K4NYnQAaaIiZnJNOItA$RmiZk+2u6wGpsA/eP7VzixL9k0vTfKxPlxp/b2BlcLc"
+    }
+  ],
   "quotes": {
     "min_length": 1,
     "max_length": 5000,
