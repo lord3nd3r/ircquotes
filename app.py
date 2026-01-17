@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, abo
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.middleware.proxy_fix import ProxyFix
 import datetime
 import json
 import random
@@ -102,6 +103,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = config.database_uri
 app.config['SECRET_KEY'] = open("instance/flask_secret_key", "r").read().strip()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Apply ProxyFix middleware to handle behind-proxy requests properly
+# This ensures that request.remote_addr is correct even when behind Nginx
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 # Enhanced connection pool configuration for better concurrency
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_size': 10,          # Maintain 10 connections in pool
@@ -189,17 +194,28 @@ class Quote(db.Model):
         db.Index('idx_flag_count_id', 'flag_count', 'id'),
     )
 
+class Vote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    quote_id = db.Column(db.Integer, db.ForeignKey('quote.id'), nullable=False)
+    ip_address = db.Column(db.String(45))
+    vote_type = db.Column(db.String(10)) # 'upvote' or 'downvote'
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    
+    __table_args__ = (
+        db.Index('idx_vote_quote_ip', 'quote_id', 'ip_address'),
+    )
+
 # Home route to display quotes
 @app.route('/')
 def index():
-    page = request.args.get('page', 1, type=int)
-    quotes = Quote.query.filter_by(status=1).order_by(Quote.date.desc()).paginate(page=page, per_page=5)
+    # quotes query removed as it's not used in index.html (welcome page)
+    # If quotes should be displayed on home, update index.html to include loop from browse.html
     
     # Get the count of approved and pending quotes
     approved_count = Quote.query.filter_by(status=1).count()
     pending_count = Quote.query.filter_by(status=0).count()
     
-    return render_template('index.html', quotes=quotes, approved_count=approved_count, pending_count=pending_count)
+    return render_template('index.html', approved_count=approved_count, pending_count=pending_count)
 
 # Separate route for submitting quotes
 @app.route('/submit', methods=['GET', 'POST'])
@@ -242,6 +258,13 @@ def submit():
                                  original_text=quote_text)
 
         ip_address = validate_ip_address(request.remote_addr)  # Get user's IP address
+        
+        # Rate Limiting: Check for submissions in the last 60 seconds
+        limit_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=60)
+        if Quote.query.filter(Quote.ip_address == ip_address, Quote.submitted_at > limit_time).first():
+            flash("You are submitting too fast. Please wait a minute before trying again.", 'error')
+            return redirect(url_for('submit'))
+
         user_agent = request.headers.get('User-Agent')  # Get the user's browser info
 
         # Determine initial status based on config
@@ -261,8 +284,7 @@ def submit():
             db.session.commit()
             
             # Log the quote creation for debugging
-            if config.get('logging.level') == 'DEBUG':
-                print(f"Quote created: ID={new_quote.id}, Status={new_quote.status}, Text='{quote_text[:50]}...'")
+            logging.debug(f"Quote created: ID={new_quote.id}, Status={new_quote.status}, Text='{quote_text[:50]}...'")
             
             if auto_approve:
                 flash("Thanks! Your quote has been submitted and automatically approved.", 'success')
@@ -270,7 +292,7 @@ def submit():
                 flash("Thanks! Your quote has been submitted and is awaiting approval by our moderators.", 'success')
         except Exception as e:
             db.session.rollback()
-            print(f"Error submitting quote: {e}")  # Always log errors
+            logging.error(f"Error submitting quote: {e}")  # Always log errors
             flash("Sorry, something went wrong while submitting your quote. Please try again in a moment.", 'error')
 
         return redirect(url_for('index'))
@@ -297,64 +319,70 @@ def vote(id, action):
             flash(error_msg, 'error')
             return redirect(url_for('browse'))
 
-    # Retrieve vote history from the cookie
-    vote_cookie = request.cookies.get('votes')
-    if vote_cookie:
-        try:
-            vote_data = json.loads(vote_cookie)
-        except (json.JSONDecodeError, ValueError):
-            # If cookie is corrupted, start fresh
-            vote_data = {}
-    else:
-        vote_data = {}
+    # Retrieve vote history from database using IP
+    client_ip = validate_ip_address(request.remote_addr)
+    existing_vote = Vote.query.filter_by(quote_id=id, ip_address=client_ip).first()
 
     message = ""
-    # If no prior vote, apply the new vote
-    if str(id) not in vote_data:
-        if action == 'upvote':
-            quote.votes += 1
-            vote_data[str(id)] = 'upvote'
-        elif action == 'downvote':
-            quote.votes -= 1
-            vote_data[str(id)] = 'downvote'
-        message = "Thank you for voting!"
-
-    else:
-        previous_action = vote_data[str(id)]
-
-        if previous_action == action:
-            # If the user clicks the same action again, undo the vote
+    
+    def update_vote():
+        nonlocal message
+        
+        # If no prior vote, apply the new vote
+        if not existing_vote:
             if action == 'upvote':
-                quote.votes -= 1
-            elif action == 'downvote':
                 quote.votes += 1
-            del vote_data[str(id)]  # Remove the vote record (undo)
-            message = "Your vote has been undone."
+                new_vote = Vote(quote_id=id, ip_address=client_ip, vote_type='upvote')
+                db.session.add(new_vote)
+            elif action == 'downvote':
+                quote.votes -= 1
+                new_vote = Vote(quote_id=id, ip_address=client_ip, vote_type='downvote')
+                db.session.add(new_vote)
+            message = "Thank you for voting!"
+
         else:
-            # If the user switches votes (upvote -> downvote or vice versa)
-            if previous_action == 'upvote' and action == 'downvote':
-                quote.votes -= 2  # Undo upvote (+1) and apply downvote (-1)
-                vote_data[str(id)] = 'downvote'
-            elif previous_action == 'downvote' and action == 'upvote':
-                quote.votes += 2  # Undo downvote (-1) and apply upvote (+1)
-                vote_data[str(id)] = 'upvote'
-            message = "Your vote has been changed."
+            previous_action = existing_vote.vote_type
+
+            if previous_action == action:
+                # If the user clicks the same action again, undo the vote
+                if action == 'upvote':
+                    quote.votes -= 1
+                elif action == 'downvote':
+                    quote.votes += 1
+                db.session.delete(existing_vote)  # Remove the vote record (undo)
+                message = "Your vote has been undone."
+            else:
+                # If the user switches votes (upvote -> downvote or vice versa)
+                if previous_action == 'upvote' and action == 'downvote':
+                    quote.votes -= 2  # Undo upvote (+1) and apply downvote (-1)
+                    existing_vote.vote_type = 'downvote'
+                elif previous_action == 'downvote' and action == 'upvote':
+                    quote.votes += 2  # Undo downvote (-1) and apply upvote (+1)
+                    existing_vote.vote_type = 'upvote'
+                message = "Your vote has been changed."
+        
+        db.session.commit()
 
     # Save the updated vote data with retry for database locks
     try:
         # Simple retry mechanism for database locks
-        db_retry_operation(lambda: db.session.commit())
+        db_retry_operation(update_vote)
         
         # Check if it's an AJAX request
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             # Return JSON response for AJAX
+            current_vote_type = None
+            # Re-query to get current state after operation
+            updated_vote = Vote.query.filter_by(quote_id=id, ip_address=client_ip).first()
+            if updated_vote:
+                current_vote_type = updated_vote.vote_type
+                
             resp = make_response(jsonify({
                 'success': True,
                 'votes': quote.votes,
-                'user_vote': vote_data.get(str(id)),
+                'user_vote': current_vote_type,
                 'message': message
             }))
-            resp.set_cookie('votes', json.dumps(vote_data), max_age=60*60*24*365)
             return resp
         else:
             # Traditional redirect for non-AJAX requests
@@ -789,8 +817,9 @@ def search():
     pending_count = Quote.query.filter_by(status=0).count()
 
     if query:
-        # Perform text search in quotes using safe parameterized query
-        quotes = Quote.query.filter(Quote.text.contains(query), Quote.status == 1).all()
+        quotes = Quote.query.filter(Quote.text.contains(query), Quote.status == 1).limit(50).all()
+        if len(quotes) == 50:
+            flash("Search restricted to top 50 matches. Please verify your query for more specific results.", 'info')
 
     return render_template('search.html', quotes=quotes, query=query, approved_count=approved_count, pending_count=pending_count)
 
@@ -1061,7 +1090,7 @@ with app.app_context():
             # Add the missing column using raw SQL
             db.session.execute(db.text("ALTER TABLE quote ADD COLUMN flag_count INTEGER DEFAULT 0"))
             db.session.commit()
-            print("Added flag_count column to existing database")
+            logging.info("Added flag_count column to existing database")
     
     # Add submitted_at column if it doesn't exist (for existing databases)
     try:
@@ -1072,7 +1101,7 @@ with app.app_context():
             # Add the missing column using raw SQL
             db.session.execute(db.text("ALTER TABLE quote ADD COLUMN submitted_at DATETIME"))
             db.session.commit()
-            print("Added submitted_at column to existing database")
+            logging.info("Added submitted_at column to existing database")
 
 # Initialize CORS for cross-origin API access
 CORS(app)

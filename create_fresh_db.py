@@ -3,7 +3,14 @@
 
 import os
 import sqlite3
+import sys
 from datetime import datetime
+
+print("WARNING: This script will DELETE the existing database and create a new one with test data.")
+response = input("Are you sure you want to continue? (yes/no): ")
+if response.lower() != 'yes':
+    print("Operation cancelled.")
+    sys.exit(0)
 
 # Remove existing database files
 db_files = ['instance/quotes.db', 'instance/quotes.db-shm', 'instance/quotes.db-wal']
@@ -31,9 +38,22 @@ CREATE TABLE quote (
 )
 """)
 
+# Create vote table
+cursor.execute("""
+CREATE TABLE vote (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quote_id INTEGER NOT NULL,
+    ip_address TEXT,
+    vote_type TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(quote_id) REFERENCES quote(id)
+)
+""")
+
 # Create indexes for performance
 cursor.execute("CREATE INDEX idx_status_id ON quote(status, id)")
 cursor.execute("CREATE INDEX idx_flag_count_id ON quote(flag_count, id)")
+cursor.execute("CREATE INDEX idx_vote_quote_ip ON vote(quote_id, ip_address)")
 
 # Insert test data
 test_quotes = [
